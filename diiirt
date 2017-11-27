@@ -1,0 +1,239 @@
+import React, { Component } from 'react';
+import TodoList from './TodoList'; 
+
+
+class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      text: '',
+      priority: '',
+      todos: []
+    }
+    this.count = 0;
+    this.selectOnChange = this.selectOnChange.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.changeStatus = this.changeStatus.bind(this);
+    this.handleSave=this.handleSave.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
+  }
+
+  selectOnChange(event) {
+    this.setState({ priority: event.target.value });
+  }
+
+  handleChange(event) {
+    this.setState({ text: event.target.value })
+  }
+
+  handleClick(event) {
+    event.preventDefault();
+    // this.state.text empty = return false
+    if(this.state.text == ''){
+      return false
+      
+    }
+
+    const newTodo = {
+      id: this.count++,
+      text: this.state.text,
+      priority: this.state.priority,
+      isEditing: false
+    }
+
+    //get everything from this.state.todos how to clone array
+    let allTodos = this.state.todos;
+
+    //push a newTodo inside oldTodos
+    allTodos.push(newTodo);
+
+    this.setState({ todos: allTodos });
+    
+  }
+
+  changeStatus(id) {
+    //todos[]
+    const index = this.state.todos.findIndex((todo) => todo.id === id);
+    const allTodos = this.state.todos;
+
+    allTodos[index].isEditing = true;
+
+    this.setState({todos: allTodos});
+  }
+
+  handleDelete(id) {
+    const index =this.state.todos.findIndex((todo) => todo.id===id);
+    const allTodos= this.state.todos;
+    allTodos.splice(index, 1);
+    this.setState({todos:allTodos});
+  }
+
+  handleSave(text, priority, id){
+const index =this.state.todos.findIndex((todo) => todo.id===id);
+const todoLi=this.state.todos;
+
+todoLi[index].isEditing=false;
+todoLi[index].text= text;
+todoLi[index].priority =priority;
+
+this.setState({todos: todoLi});
+
+}
+
+  render() {
+   
+    return (
+      <div className='container'>
+        <h1 className="text-white font-weight-bold">Very Simple Todo App</h1>
+        <p className="text-white font-weight-light">Track all the things</p>
+        <hr />
+        <div className="row">
+          <div className="col-4">
+            <div className="card" className="card text-left">
+              <h6 className="card-header pl-3 pt-3">Add New Todo</h6>
+              <div className="card-block">
+                <h6 className="font-weight-bold">I want to..</h6>
+                <textarea onChange={this.handleChange} className="form-control create-todo-text" id="exampleFormControlTextarea1" rows="3"></textarea>
+
+                <h6 className="font-weight-bold"> How much of a priority is this?</h6>
+                <select className="form-control mb-5 create-todo-priority" onChange={this.selectOnChange}>
+                  <option value={''}>Select a Priority</option>
+                  <option value={1} >Low</option>
+                  <option value={2} >Mid</option>
+                  <option value={3} >High</option>
+                </select>
+
+                <button className="btn btn-success btn-block" value='submit' onClick={this.handleClick}>
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+
+          <div className="col-8">
+            <div className="card mb-5" >
+
+              <div className="card-header" >
+                View Todos
+              </div>
+
+              <div className="alert alert-info mb-0">
+                <h5 className="card-title">Welcome to Very Simple Todo App!</h5>
+                <p className="card-text  font-italic">Get started now by adding a new todo on the left.</p>
+              </div>
+              <div>
+                {
+                this.state.todos.map(todo => (
+                  <TodoList key={todo.id} onEdit={this.changeStatus} onSave={this.handleSave} onDelete={this.handleDelete} todo={todo} />
+                  ))
+                }
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+}
+
+
+
+
+export default App;
+
+
+
+
+
+-----------------------------------------------------------
+
+
+import React, { Component } from 'react'
+
+
+class TodoList extends Component {
+    constructor(props) {
+        super(props);
+
+        this.selectOnChange = this.selectOnChange.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.editHandler=this.editHandler.bind(this);
+        this.onDelete = this.onDelete.bind(this);
+        this.onSave = this.onSave.bind(this);
+
+        this.state = {
+            text: '',
+            priority: ''
+        }
+    }
+
+    selectOnChange(event) {
+        this.setState({ priority: event.target.value });
+    }
+
+    handleChange(event) {
+       this.setState({ text: event.target.value});
+        //this.props.handleChange(this.props.todo.text)
+    }
+
+    editHandler(){
+        this.setState ({text: this.props.todo.text});
+        this.props.onEdit(this.props.todo.id);
+    }
+
+    onDelete() {
+        this.props.onDelete(this.props.todo.id);
+    }
+
+    onSave() {
+        //text, priority, id
+        this.props.onSave(this.state.text, this.state.priority, this.props.todo.id); 
+    }
+
+
+    render() {
+        if (this.props.todo.priority == 2) {
+            var priority = 'alert-warning';
+        } else if (this.props.todo.priority == 3) {
+            var priority = 'alert-danger';
+        } else {
+            var priority = 'alert-success'; 
+        }
+        if (this.props.todo.isEditing === true) {
+            return (
+                <div className="alert alert-success mb-0 clearfix" >
+                    <h6 className="font-weight-bold">Description</h6>
+                    <textarea className="form-control update-todo-text" defaultValue={this.props.todo.text} id="exampleFormControlTextarea1" rows="1" onChange={this.handleChange}></textarea>
+                    <h6 className="font-weight-bold mt-3 update-todo-priority">Priority</h6>
+                    <select className="form-control" defaultValue={this.props.todo.priority} onChange={this.selectOnChange}>
+                    <option value={''}>Select a Priority</option>
+                        <option value="1">Low Priority</option>
+                        <option value="2">Mid Priority</option>
+                        <option value="3">High Priority</option>
+                    </select>
+                    <button type="button" className="btn btn-success pull-right mr-3 update-todo " onClick={this.onSave}>Save</button>
+                </div>)
+        }else {
+            return (
+                <div className={`alert ${priority}`}>
+                    <input className="form-check-input ml-1" type="checkbox" id="inlineCheckbox2" />
+                    {this.props.todo.text}
+
+                    <button className="pull-right mr-2 delete-todo" onClick={this.onDelete}>
+                        Delete
+                        <i className="fa fa-trash ml-1" aria-hidden="true"></i>
+                    </button>
+                    <button className="pull-right mr-3 edit-todo" onClick={this.editHandler}>
+                        Edit
+                        <i className="fa fa-pencil-square-o ml-1" aria-hidden="true"></i>
+                    </button>
+                </div>);
+        }
+    }
+}
+export default TodoList;
+
